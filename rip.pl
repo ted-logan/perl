@@ -37,6 +37,7 @@ if($cddb{title}) {
 		or die "Can't open tempfile ($tempfile): $!\n";
 	print TEMP "Artist: ", $cddb{artist}, "\n";
 	print TEMP "Album: ", $cddb{title}, "\n";
+	print TEMP "Year: \n";
 	print TEMP "Collection: jaeger\n";
 	for(my $i = 0; $i < @{$cddb{track}}; $i++) {
 		print TEMP "Track ", ($i + 1), " (",
@@ -50,6 +51,7 @@ if($cddb{title}) {
 		or die "Can't open tempfile ($tempfile): $!\n";
 	print TEMP "Artist: \n";
 	print TEMP "Album: \n";
+	print TEMP "Year: \n";
 	print TEMP "Collection: jaeger\n";
 
 	# spawn cdparanoia to figure out the track info
@@ -110,7 +112,7 @@ for(my $i = 1; $i < @tracks; $i++) {
 	print "  $oggfile\n";
 	print '*' x 72, "\n";
 
-	system(qq'cdparanoia -d $device $i - | oggenc -Q -q 5 -a "$params{artist}" -t "$tracks[$i]" -l "$params{album}" -c "collection=$params{collection}" -c "tracknumber=$i" -o $oggfile -') == 0
+	system(qq'cdparanoia -d $device $i - | oggenc -Q -q 5 -a "$params{artist}" -t "$tracks[$i]" -l "$params{album}" -c "year=$params{year}" -c "collection=$params{collection}" -c "tracknumber=$i" -o $oggfile -') == 0
 		or die "cdparanoia/oggenc failed: $?\n";
 
 	if(grep /--play/, @ARGV) {
