@@ -1,16 +1,37 @@
 #!/usr/bin/perl
 
+# Rips books-on-cds into a single AAC audio file, with the extension .m4b, per
+# disk. The extension convinces iTunes to treat the file as an audio book,
+# enabling various features such as faster playback and automatic bookmarking.
+
 use strict;
 
-my $title = "Welcome to the Monkey House";
-my $author = "Kurt Vonnegut";
-my $first_disk = 1;
+# Solicit user input on the title, author, and starting disk
+print "Preparing to rip audio book\n";
+print "\n";
+
+print "Title: ";
+my $title = <>;
+chomp $title;
+exit unless $title;
+
+print "Author: ";
+my $author = <>;
+chomp $author;
+exit unless $author;
+
+print "First disk: [1] ";
+my $first_disk = <>;
+chomp $first_disk;
+unless($first_disk) {
+	$first_disk = 1;
+}
 
 my $lastpid = undef;
 
 for(my $i = $first_disk; ; $i++) {
 	print '=' x 72, "\n";
-	print " Please insert disk ", $i, " and press enter, or ctl+c when done\n";
+	print " Please insert disk ", $i, " and press enter, or ctl+c when encoding is complete\n";
 	print '=' x 72, "\n";
 	scalar <STDIN>;
 
