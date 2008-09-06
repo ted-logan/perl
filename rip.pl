@@ -23,6 +23,26 @@ $config{CDDB_PORT}=8880;                       # set cddb port
 $config{CDDB_MODE}="cddb";                     # set cddb mode: cddb or http
 $config{CD_DEVICE}=$device; 
 
+# Clean up an artist name, album name, or track name for use as a file name
+# or directory
+sub clean {
+	my $name = shift;
+
+	$name =~ s/\(.*?\)//g;
+	$name =~ s/\W+/_/g;
+	$name =~ s/^_+//;
+	$name =~ s/_+$//;
+
+	return $name;
+}
+
+sub quote {
+	my $name = shift;
+
+	$name =~ s/"/\\"/g;
+	return "\"$name\"";
+}
+
 # read the contents of the cd
 
 print "Scanning cd...\n";
@@ -87,23 +107,11 @@ close TEMP;
 unlink $tempfile;
 
 # figure out where to put it
-my $dir = do {
-	my $clean_artist = $params{artist};
-	$clean_artist =~ s/\W+/_/g;
-
-	my $clean_album = $params{album};
-	$clean_album =~ s/\W+/_/g;
-
-	"$basedir/$clean_artist/$clean_album";
-};
+my $dir = $basedir . '/' . clean($params{artist}) . '/' . clean($params{album});
 
 # proceed to rip the cd
 for(my $i = 1; $i < @tracks; $i++) {
-	my $clean_title = $tracks[$i];
-	$clean_title =~ s/\(.*?\)//g;
-	$clean_title =~ s/\W+/_/g;
-	$clean_title =~ s/^_+//;
-	$clean_title =~ s/_+$//;
+	my $clean_title = clean($tracks[$i]);
 
 	my $oggfile = sprintf '%s/%02d-%s.ogg', $dir, $i, $clean_title;
 
@@ -112,7 +120,7 @@ for(my $i = 1; $i < @tracks; $i++) {
 	print "  $oggfile\n";
 	print '*' x 72, "\n";
 
-	system(qq'cdparanoia -d $device $i - | oggenc -Q -q 5 -a "$params{artist}" -t "$tracks[$i]" -l "$params{album}" -c "year=$params{year}" -c "collection=$params{collection}" -c "tracknumber=$i" -o $oggfile -') == 0
+	system("cdparanoia -d $device $i - | oggenc -Q -q 5 -a " . quote($params{artist}) . " -t " . quote($tracks[$i]) . " -l " . quote($params{album}) . " -c " . quote("year=$params{year}") . " -c " . quote("collection=$params{collection}") . " -c " . quote("tracknumber=$i") . " -o $oggfile -") == 0
 		or die "cdparanoia/oggenc failed: $?\n";
 
 	if(grep /--play/, @ARGV) {
@@ -125,3 +133,5 @@ for(my $i = 1; $i < @tracks; $i++) {
 		}
 	}
 }
+
+system "eject";
