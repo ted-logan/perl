@@ -1,5 +1,11 @@
 #!/usr/bin/perl
 
+# To print using manual feed on Rygel, use:
+# $ lpr -o InputSlot=Tray1_Man <FILE>
+#
+# To figure out what the accepted options are for an arbitrary printer:
+# $ lpoptions -l
+
 use strict;
 
 use Encode;
