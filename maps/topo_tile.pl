@@ -4,8 +4,7 @@
 # topographic map into a number of tiles for use in Google Earth or my own
 # not-yet-written mapping application. My algorithm so far is:
 #
-# 1. Rasterize the PDF. (My first test is at 100 dpi, which is adequate for
-#    test purposes but not for final production.)
+# 1. Rasterize the PDF at 200 dpi.
 # 2. Figure out where the corners of the map are. This may be best done
 #    manually.
 # 3. Deskew the image. In my test, it seemed to be as easy as rotating the
@@ -18,6 +17,7 @@
 
 use strict;
 
+use File::Spec;
 use File::Temp qw(tempfile tempdir);
 use Geo::Coordinates::DecimalDegrees;
 use Image::Magick;
@@ -47,14 +47,71 @@ sub read_dms {
 	return dms2decimal(@c);
 }
 
+my $filename = shift @ARGV;
+unless($filename) {
+	print "Enter image filename: ";
+	$filename = <>; chomp $filename;
+}
+
+my $basename = (File::Spec->splitpath($filename))[2];
+
+# Is this a PDF? Rasterize it, and give the user the filename
+my $temp_raster;
+if($filename =~ /\.pdf$/i) {
+	my $pdf = $filename;
+
+	my $template = $basename;
+	$template =~ s/\.pdf$/XXXX/;
+	$temp_raster = new File::Temp(
+		TEMPLATE => $template,
+		SUFFIX => '.png'
+	);
+	$filename = $temp_raster->filename();
+
+	print "Rasterizing $pdf at 200 dpi\n";
+
+	system("convert -density 200x200 \"$pdf\" -depth 8 \"$filename\"") == 0
+		or die "Rasterizing PDF failed\n";
+
+	print "\n";
+	print "PDF rasterized as:\n";
+	print "\t$filename\n";
+	print "\n";
+
+	system("gimp \"$filename\" &");
+}
+
+# Try to extract state and quad name from the filename
+my ($state, $name) = $basename =~ /^([A-Z][A-Z])_([A-Za-z_-]+)/;
+$name =~ s/_/ /g;
+$name =~ s/^\s+//;
+$name =~ s/\s+$//;
+
 print "Enter state: ";
-my $state = <>; chomp $state;
+$state = do {
+	if($state) {
+		print "[$state] ";
+	}
+	my $input = <>; chomp $input;
+	if($input) {
+		$input;
+	} else {
+		$state;
+	}
+};
 
 print "Enter quad name: ";
-my $name = <>; chomp $name;
-
-print "Enter image filename: ";
-my $filename = <>; chomp $filename;
+$name = do {
+	if($name) {
+		print "[$name] ";
+	}
+	my $input = <>; chomp $input;
+	if($input) {
+		$input;
+	} else {
+		$name;
+	}
+};
 
 # Determine the image size so we know where the center is
 my ($width, $height) = do {
@@ -114,8 +171,6 @@ my $rotate = - do {
 
 print "\n\n";
 printf "Image should be rotated by %.5f degrees\n", rad2deg($rotate);
-
-# convert -density 200x200 /home/jaeger/gps/maps/topo/OR_Jubilee_Lake_O45117G8_geo.PDF -depth 8 OR_Jubilee_Lake_200dpi.png
 
 # Rotate the points around the top-right corner of the image so we know where
 # to crop
