@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+# Formats books in Library Thing into a postscript file for easy printing
+#
+# Log into Library Thing, then save:
+# http://www.librarything.com/export-tab
+#
 # To print using manual feed on Rygel, use:
 # $ lpr -o InputSlot=Tray1_Man <FILE>
 #
@@ -24,72 +29,80 @@ while(<>) {
 	}
 }
 
-open HTML, ">labels.html";
-print HTML <<HTML;
-<html>
+# Write output directly using PostScript. See
+# http://jaeger.festing.org/changelog/1290.html for discussion.
+#
+# Note that the generated PostScript doesn't handle overflow very well.
+# Try not to print more than 80 labels at once.
+open PS, ">labels.ps"
+	or die "Can't write labels.ps: $!\n";
 
-<style type="text/css">
-div.column {
-	position:	absolute;
-	width:	2.05in;
-	top:	0.5in;
-}
-div.column > div {
-	width:	1.75in;
-	height:	0.5in;
-	text-align:	center;
-	line-height:	0.5in;
-	font-size:	9pt;
-}
-div#col1 {
-	left:	0.3in;
-}
-div#col2 {
-	left:	2.35in;
-}
-div#col3 {
-	left:	4.4in;
-}
-div#col4 {
-	left:	6.45in;
-}
-</style>
+print PS <<PS;
+%!PS-Adobe-3.0
+%%BoundingBox: 0 0 612 792
+%%HiResBoundingBox: 0 0 612 792
 
-<body>
+/inch {72 mul} def
 
-HTML
+/hpitch 2.06 inch def
+/vpitch 0.50 inch def
+/width  1.75 inch def
+/height 0.50 inch def
+/left   0.28 inch def
+/top    0.50 inch def
+/cols   4    def
+/rows  20    def
 
-my $i = 0;
+% Content to print on labels
+/content [
+PS
+
 foreach my $lc (sort lcsort keys %books) {
 	printf "%-${longest_lc}s  %s\n",
 		$lc, substr($books{$lc}, 0, 80 - $longest_lc - 2);
-	if($i < 80) {
-		if(($i % 20) == 0) {
-			if($i > 0) {
-				print HTML <<HTML;
-</div>
-
-HTML
-			}
-			my $col = $i / 20 + 1;
-			print HTML <<HTML;
-<div class="column" id="col$col">
-HTML
-		}
-		print HTML "<div>$lc</div>\n";
-	}
-
-	$i++;
+	print PS "(", $lc, ")\n";
 }
 
-print HTML <<HTML;
-</div>
+print PS <<PS;
+] def
 
-</body>
-</html>
-HTML
+% Height of the letter page
+/pageheight 792 def
+/fontsize 11 def
 
-close HTML;
+/Times-Roman findfont fontsize scalefont setfont
+
+/i 0 def
+
+0 1 cols 1 sub {
+  /x exch def
+  0 1 rows 1 sub {
+    /y exch def
+
+    gsave
+    left x hpitch mul add pageheight top sub y vpitch mul sub translate
+
+    % Write the text itself
+    i content length lt {
+      0 0 moveto
+      content i get
+      dup stringwidth pop
+      width exch sub 2 div
+      height fontsize add 2 neg div
+      moveto
+      show
+    } if
+
+    /i i 1 add def
+
+    grestore
+  } for
+} for
+
+showpage
+PS
+
+close PS;
 
 sub lc_fragment {
 	$_[0] =~ /^([A-Z][A-Z]?)([0-9]+)\s*\.?\s*([A-Z0-9\. ]*)$/i;
