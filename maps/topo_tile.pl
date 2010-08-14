@@ -2,7 +2,15 @@
 
 # My ultimate goal for this script is to convert a PDF containing a USGS
 # topographic map into a number of tiles for use in Google Earth or my own
-# not-yet-written mapping application. My algorithm so far is:
+# not-yet-written mapping application.
+#
+# Go download your own PDFs from the USGS' website. Go to
+# http://www.usgs.gov/pubprod/ , click on "Download digital scans of topo
+# maps", then "Map Locator". Or, if that fails, try:
+#
+# http://usgs-catalog4.srv.mst.edu/store3/digital_download/mapping_ap.jsp
+#
+# My algorithm so far is:
 #
 # 1. Rasterize the PDF at 200 dpi.
 # 2. Figure out where the corners of the map are. This may be best done
@@ -10,10 +18,24 @@
 # 3. Deskew the image. In my test, it seemed to be as easy as rotating the
 #    image by the correct angle, calculated as the average of the angles
 #    between the corners.
-# 4. Crop the image into one or more tiles. For 7.5-minute quads, I'm thinking
-#    2.5" tiles.
-# 5. Convert the corner coordinates from NAD-27 to WGS-84, and possibly into
-#    UTM.
+# 4. Convert the corner coordinates from NAD-27 to WGS-84.
+# 5. Write a kmz file containing the image and the reference.
+# 
+# Copyright (C) 2010 Ted Logan # http://tedlogan.com/ # ted.logan@gmail.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use strict;
 
