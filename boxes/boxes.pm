@@ -53,4 +53,34 @@ sub boxes {
 	%boxes;
 }
 
+sub writebox {
+	my $box = shift;
+	my $boxnum = $box->{number};
+
+	unless(-w "$boxdir/$boxnum.txt") {
+		unlink "$boxdir/$boxnum.txt";
+	}
+
+	open BOX, ">$boxdir/$boxnum.txt"
+		or die "Can't write $boxnum.txt: $!\n";
+
+	my %metadata = %$box;
+	delete $metadata{number};
+	delete $metadata{packed};
+	delete $metadata{CONTENT};
+	foreach my $tag (keys %metadata) {
+		print BOX "$tag: $metadata{$tag}\n";
+	}
+	if(%metadata) {
+		print "\n";
+	}
+
+	print BOX $box->{CONTENT};
+
+	close BOX;
+
+	# Make sure the file is group-writable
+	chmod 0664, "$boxdir/$boxnum.txt";
+}
+
 1;
