@@ -18,15 +18,44 @@ my %boxes = boxes::boxes();
 
 my %boxes_to_label;
 
+my $label_size;
+
 foreach my $box (@ARGV) {
 	if(exists $boxes{$box}) {
 		$boxes_to_label{$box} = $boxes{$box};
+		if($boxes{$box}->{label}) {
+			if(defined $label_size) {
+				if($label_size ne $boxes{$box}->{label}) {
+					die "Box $box has label size " .
+						"\"$boxes{$box}->{label}\" " .
+						"but previous boxes have " .
+						"label size \"$label_size\"\n";
+				}
+			} else {
+				$label_size = $boxes{$box}->{label};
+			}
+		}
 	} else {
 		die "Box $box not found\n";
 	}
 }
 
-print "Preparing labels for @ARGV:\n";
+unless(defined $label_size) {
+	die "No boxes have label sizes specified\n";
+}
+
+my $template;
+
+if($label_size eq "none") {
+	$template = "box_template.odt";
+} elsif($label_size eq "number") {
+	$template = "box_template_small.odt";
+} else {
+	die "Label size \"$label_size\" not supported; " .
+		"must be \"none\" or \"number\"\n";
+}
+
+print "Preparing labels for @ARGV (existing label $label_size):\n";
 
 my $oldpwd = cwd();
 my $scriptdir = (fileparse(Cwd::realpath($0)))[1];
@@ -38,7 +67,7 @@ print "Created temporary directory $dir\n";
 chdir $dir
 	or die "Can't chdir to temporary directory $dir: $!\n";
 
-system("unzip ${scriptdir}box_template.odt") == 0
+system("unzip ${scriptdir}$template") == 0
 	or die "Can't unzip box template: $!\n";
 
 # Create QR images
