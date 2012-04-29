@@ -27,7 +27,14 @@ sub boxes {
 		my %metadata;
 		for(my $i = 0; $i < @contents; $i++) {
 			if($contents[$i] =~ /^(\w+):\s+(.*)/) {
-				$metadata{$1} = $2;
+				my $tag = lc $1;
+				my $value = $2;
+				if($tag eq 'label') {
+					$value = lc $value;
+				} else {
+					$value = ucfirst $value;
+				}
+				$metadata{$tag} = $value;
 				next;
 			}
 			if($contents[$i] =~ /^\s*$/) {
