@@ -9,25 +9,23 @@ use Date::Parse;
 use Time::Local;
 use POSIX qw(strftime);
 
-# Longmont recycling holidays for 2012
+# Western Disposal pickup holidays for 2012
+# http://www.westerndisposal.com/userfiles/Tue%20E%202012.pdf
 my @holidays = qw(
-	2012-01-02
-	2012-01-16
-	2012-02-20
 	2012-05-28
 	2012-07-04
 	2012-09-03
-	2012-11-12
 	2012-11-22
 	2012-12-25
+	2013-01-01
 );
 
 # Normally, pickups are on Tuesday.
 my $pickup_wday = 2;
 
 =for test
-my $begin = str2time("2009-01-01");
-my $end = str2time("2010-01-01");
+my $begin = str2time("2012-01-01");
+my $end = str2time("2013-01-01");
 
 for(my $date = $begin + 3600*18; $date += 86400; $date < $end) {
 	my $pickup = calculate_pickup($date);
@@ -87,14 +85,14 @@ sub calculate_pickup {
 		}
 	}
 
-	# East-side recycling pickup is every other week, starting with the week
-	# of 09 November 2008
-	my $first_recycling_pickup = str2time("2008-11-09", "GMT");
+	# Recycling pickup is every other week, starting with the week
+	# of 27 December 2011
+	my $first_recycling_pickup = str2time("2011-12-27", "GMT");
 	my $week = int(($sunday - $first_recycling_pickup) / (3600*24*7));
 
 	if($week % 2 == 0) {
-		return "Trash and Recycling";
+		return "Trash and Compost";
 	} else {
-		return "Trash";
+		return "Trash and Recycling";
 	}
 }
