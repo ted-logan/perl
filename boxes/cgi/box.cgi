@@ -11,6 +11,7 @@ BEGIN {
 }
 
 use boxes;
+use CGI;
 
 print "content-type: text/html\n\n";
 
@@ -53,12 +54,34 @@ if($boxnum) {
 } else {
 	my @columns = qw(number contents packed current-location location label);
 
+	my $q = new CGI;
+	my $sort = $q->param('sort');
+	if(!(grep(/^$sort$/, @columns))) {
+		$sort = 'number';
+	}
+
 	print "<title>Boxes</title></head>\n";
 	print "<table>\n";
-	print "<tr>", map { "<th>" . lcfirst($_) . "</th> " } @columns;
+	print "<tr>\n";
+	foreach my $col (@columns) {
+		print "<th>";
+		if($sort eq $col) {
+			print "$col";
+		} else {
+			print qq'<a href="/b/?sort=$col">$col</a>';
+		}
+		print "</th>\n";
+	}
 	print "</tr>\n";
 
-	foreach my $box (sort {$a <=> $b} keys %boxes) {
+	my $sortfunc;
+	if($sort eq 'number') {
+		$sortfunc = sub { $a <=> $b };
+	} else {
+		$sortfunc = sub { $boxes{$a}->{$sort} cmp $boxes{$b}->{$sort} };
+	}
+
+	foreach my $box (sort $sortfunc keys %boxes) {
 		print "<tr>",
 			map { "<td><a href=\"/b/$box\">" . $boxes{$box}->{$_} . "</a></td>" } @columns;
 		print "</tr>\n";
