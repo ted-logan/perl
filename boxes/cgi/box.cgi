@@ -25,17 +25,24 @@ print <<HTML;
 HTML
 
 if($boxnum) {
+	my @columns = qw(contents current-location location label packed);
+
 	print "<title>Box $boxnum</title></head>\n";
 	print "<body>\n";
 	print qq'<a href="/b/">All boxes</a>\n';
 	if(exists $boxes{$boxnum}) {
 		print "<h1>Box $boxnum</h1>\n";
-		print "<h2>Contents: $boxes{$boxnum}->{contents}</h2>\n";
-		print "<h2>Location: $boxes{$boxnum}->{location}</h2>\n";
-		print "<h2>Label: $boxes{$boxnum}->{label}</h2>\n";
+		foreach my $label (@columns) {
+			if($boxes{$boxnum}->{$label}) {
+				printf "<h2>%s: %s</h2>\n",
+					ucfirst($label),
+					$boxes{$boxnum}->{$label};
+			}
+		}
 
 		my $c = $boxes{$boxnum}->{CONTENT};
 		$c =~ s/$/<br>/mg;
+		$c =~ s/^\s+/&nbsp;&nbsp;&nbsp;&nbsp;/mg;
 		print $c;
 
 		print qq'<a href="/b/">All boxes</a>\n';
@@ -44,7 +51,7 @@ if($boxnum) {
 	}
 
 } else {
-	my @columns = qw(number contents location label);
+	my @columns = qw(number contents packed current-location location label);
 
 	print "<title>Boxes</title></head>\n";
 	print "<table>\n";
