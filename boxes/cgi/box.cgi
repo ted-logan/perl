@@ -40,6 +40,15 @@ if($boxnum) {
 					$boxes{$boxnum}->{$label};
 			}
 		}
+		if($boxes{$boxnum}->{librarything}) {
+			printf "<h2>Librarything: <a href=\"%s\">Box %s</a></h2>\n",
+				$boxes{$boxnum}->{librarything},
+				$boxnum;
+		} elsif(exists $boxes{$boxnum}->{librarything}) {
+			printf "<h2>Librarything: <a href=\"http://www.librarything.com/catalog/kiesa&tag=Box%%2B%d\">Box %d</a></h2>\n",
+				$boxnum,
+				$boxnum;
+		}
 
 		my $c = $boxes{$boxnum}->{CONTENT};
 		$c =~ s/$/<br>/mg;
