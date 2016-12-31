@@ -6,7 +6,7 @@ use boxes;
 
 my %tags;
 
-while($ARGV[0] =~ /^(\w+):\s*(.*)/) {
+while($ARGV[0] =~ /^([a-z0-9-_]+):\s*(.*)/) {
 	$tags{$1} = $2;
 	shift;
 }
