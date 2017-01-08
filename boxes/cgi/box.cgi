@@ -18,6 +18,7 @@ print "content-type: text/html\n\n";
 my %boxes = boxes::boxes();
 
 my ($boxnum) = $ENV{REQUEST_URI} =~ m#/(\d+)#;
+my $q = new CGI;
 
 print <<HTML;
 <html>
@@ -30,6 +31,7 @@ if($boxnum) {
 
 	print "<title>Box $boxnum</title></head>\n";
 	print "<body>\n";
+	print_search();
 	print qq'<a href="/b/">All boxes</a>\n';
 	if(exists $boxes{$boxnum}) {
 		print "<h1>Box $boxnum</h1>\n";
@@ -60,16 +62,44 @@ if($boxnum) {
 		print "Box $boxnum not found!\n";
 	}
 
+} elsif(my $query = $q->param('q')) {
+	print "<title>Search for $query</title></head>\n";
+	print_search($query);
+	print qq'<a href="/b/">All boxes</a>\n';
+	print "<ul>\n";
+
+	my $matches = 0;
+	foreach my $box (sort {$a <=> $b} keys %boxes) {
+		my @matches = grep /\b$query\b/i, map { split /\n/ } values %{$boxes{$box}};
+		if(@matches) {
+			print "<li><a href=\"/b/$box\">Box $box</a>\n";
+			print "<ul>\n";
+			print map { "<li>$_</li>\n" } @matches;
+			print "</ul>\n";
+			print "</li>\n";
+			$matches++;
+		}
+	}
+	print "</ul>\n";
+
+	if($matches > 1) {
+		print "<i>$matches matches</i>\n";
+	} elsif($matches == 1) {
+		print "<i>1 match</i>\n";
+	} else {
+		print "<i>No matches</i>\n";
+	}
+
 } else {
 	my @columns = qw(number contents packed current-location location label);
 
-	my $q = new CGI;
 	my $sort = $q->param('sort');
 	if(!(grep(/^$sort$/, @columns))) {
 		$sort = 'number';
 	}
 
 	print "<title>Boxes</title></head>\n";
+	print_search();
 	print "<table>\n";
 	print "<tr>\n";
 	foreach my $col (@columns) {
@@ -99,3 +129,14 @@ if($boxnum) {
 }
 
 print "</body></html>\n";
+
+sub print_search {
+	my $query = shift;
+
+	print <<HTML;
+<form action="/b/" method="get">
+<input name="q" value="$query"/>
+<input type="submit" value="Search" />
+</form>
+HTML
+}
