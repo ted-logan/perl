@@ -70,11 +70,16 @@ if($boxnum) {
 
 	my $matches = 0;
 	foreach my $box (sort {$a <=> $b} keys %boxes) {
-		my @matches = grep /\b$query\b/i, map { split /\n/ } values %{$boxes{$box}};
+		my @matches = grep /\b$query/i,
+			map { split /\n/ }
+			values %{$boxes{$box}};
 		if(@matches) {
 			print "<li><a href=\"/b/$box\">Box $box</a>\n";
 			print "<ul>\n";
-			print map { "<li>$_</li>\n" } @matches;
+			foreach (@matches) {
+				s/(\b$query)/<b>\1<\/b>/gi;
+				print "<li>$_</li>\n";
+			}
 			print "</ul>\n";
 			print "</li>\n";
 			$matches++;
