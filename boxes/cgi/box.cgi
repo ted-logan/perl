@@ -122,7 +122,10 @@ if($boxnum) {
 	if($sort eq 'number') {
 		$sortfunc = sub { $a <=> $b };
 	} else {
-		$sortfunc = sub { $boxes{$a}->{$sort} cmp $boxes{$b}->{$sort} };
+		$sortfunc = sub { 
+			$boxes{$a}->{$sort} cmp $boxes{$b}->{$sort} ||
+			$a <=> $b
+		};
 	}
 
 	foreach my $box (sort $sortfunc keys %boxes) {
