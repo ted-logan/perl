@@ -57,9 +57,11 @@ if($boxnum) {
 
 		} else {
 			# Show the current contents of the box
-			print qq'<form method="post" action="/b/$boxnum">\n';
-			print qq'<input type="submit" name="confirm" value="Unpack" />\n';
-			print qq'</form>\n';
+			unless($boxnum =~ /_UNPACKED$/) {
+				print qq'<form method="post" action="/b/$boxnum">\n';
+				print qq'<input type="submit" name="confirm" value="Unpack" />\n';
+				print qq'</form>\n';
+			}
 			foreach my $label (@columns) {
 				if($boxes{$boxnum}->{$label}) {
 					printf "<h2>%s: %s</h2>\n",
