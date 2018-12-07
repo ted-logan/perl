@@ -17,7 +17,7 @@ print "content-type: text/html\n\n";
 
 my %boxes = boxes::boxes();
 
-my ($boxnum) = $ENV{REQUEST_URI} =~ m#/(\d+)#;
+my ($boxnum) = $ENV{REQUEST_URI} =~ m#/b/(\w+)#;
 my $q = new CGI;
 
 print <<HTML;
