@@ -35,27 +35,53 @@ if($boxnum) {
 	print qq'<a href="/b/">All boxes</a>\n';
 	if(exists $boxes{$boxnum}) {
 		print "<h1>Box $boxnum</h1>\n";
-		foreach my $label (@columns) {
-			if($boxes{$boxnum}->{$label}) {
-				printf "<h2>%s: %s</h2>\n",
-					ucfirst($label),
-					$boxes{$boxnum}->{$label};
-			}
-		}
-		if($boxes{$boxnum}->{librarything}) {
-			printf "<h2>Librarything: <a href=\"%s\">Box %s</a></h2>\n",
-				$boxes{$boxnum}->{librarything},
-				$boxnum;
-		} elsif(exists $boxes{$boxnum}->{librarything}) {
-			printf "<h2>Librarything: <a href=\"http://www.librarything.com/catalog/kiesa&tag=Box%%2B%d\">Box %d</a></h2>\n",
-				$boxnum,
-				$boxnum;
-		}
+		if($q->param('confirm') eq 'Unpack') {
+			# Show a confirmation dialog to make sure the user
+			# wants to mark this box as unpacked (which will delete
+			# it from the database)
+			print "<h2>Do you want to unpack this box?</h2>\n";
+			print qq'<form method="post" action="/b/$boxnum">\n';
+			print qq'<input type="submit" name="confirm" value="Yes" /><br/>\n';
+			print qq'<input type="submit" name="confirm" value="No" /><br/>\n';
+			print qq'</form>\n';
+			print qq'<p>(Unpacking the box will remove it from the database.)</p>\n';
 
-		my $c = $boxes{$boxnum}->{CONTENT};
-		$c =~ s/$/<br>/mg;
-		$c =~ s/^\s+/&nbsp;&nbsp;&nbsp;&nbsp;/mg;
-		print $c;
+		} elsif($q->param('confirm') eq 'Yes') {
+			# The user has confirmed that they wish to remove it
+			# from the database. Attempt to do so.
+			if(boxes::unpackbox($boxnum)) {
+				print "<p>Box <b>$boxnum</b> unpacked.</p>\n";
+			} else {
+				print "<p>Error unpacking box <b>$boxnum</b>: $!.</p>\n";
+			}
+
+		} else {
+			# Show the current contents of the box
+			print qq'<form method="post" action="/b/$boxnum">\n';
+			print qq'<input type="submit" name="confirm" value="Unpack" />\n';
+			print qq'</form>\n';
+			foreach my $label (@columns) {
+				if($boxes{$boxnum}->{$label}) {
+					printf "<h2>%s: %s</h2>\n",
+						ucfirst($label),
+						$boxes{$boxnum}->{$label};
+				}
+			}
+			if($boxes{$boxnum}->{librarything}) {
+				printf "<h2>Librarything: <a href=\"%s\">Box %s</a></h2>\n",
+					$boxes{$boxnum}->{librarything},
+					$boxnum;
+			} elsif(exists $boxes{$boxnum}->{librarything}) {
+				printf "<h2>Librarything: <a href=\"http://www.librarything.com/catalog/kiesa&tag=Box%%2B%d\">Box %d</a></h2>\n",
+					$boxnum,
+					$boxnum;
+			}
+
+			my $c = $boxes{$boxnum}->{CONTENT};
+			$c =~ s/$/<br>/mg;
+			$c =~ s/^\s+/&nbsp;&nbsp;&nbsp;&nbsp;/mg;
+			print $c;
+		}
 
 		print qq'<a href="/b/">All boxes</a>\n';
 	} else {

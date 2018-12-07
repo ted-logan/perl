@@ -90,4 +90,10 @@ sub writebox {
 	chmod 0664, "$boxdir/$boxnum.txt";
 }
 
+# Attempts to unpack a box, by number
+sub unpackbox {
+	my $boxnum = shift;
+	return rename("$boxdir/$boxnum.txt", "$boxdir/${boxnum}_UNPACKED.txt");
+}
+
 1;
