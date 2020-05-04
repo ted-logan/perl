@@ -2,8 +2,8 @@
 
 # Formats books in Library Thing into a postscript file for easy printing
 #
-# Log into Library Thing, then save:
-# http://www.librarything.com/export-tab
+# Export JSON from LibraryThing:
+# http://www.librarything.com/export.php?export_type=json
 #
 # To print using manual feed on Rygel, use:
 # $ lpr -o InputSlot=Tray1_Man <FILE>
@@ -13,19 +13,34 @@
 
 use strict;
 
-use Encode;
+#use Encode;
+use JSON;
+
+binmode(STDOUT, "encoding(UTF-8)");
+
+my $catalog = do {
+	local $/ = undef;
+	my $json = <>;
+	from_json($json);
+};
 
 my %books;
 my $longest_lc = 0;
 
-while(<>) {
-	$_ = decode("ucs-2", $_);
-	my @data = split /\t/;
-	if($data[13] && $data[21] =~ /Label Me/) {
-		$books{$data[13]} = $data[1];
-		if(length($data[13]) > $longest_lc) {
-			$longest_lc = length($data[13]);
-		}
+foreach my $book (values %$catalog) {
+	unless(grep /Label Me/, @{$book->{tags}}) {
+		next;
+	}
+	unless(ref $book->{lcc} eq 'HASH') {
+		next;
+	}
+	my $lc = $book->{lcc}->{code};
+	unless($lc) {
+		next;
+	}
+	$books{$lc} = $book->{title};
+	if(length($lc) > $longest_lc) {
+		$longest_lc = length($lc);
 	}
 }
 
