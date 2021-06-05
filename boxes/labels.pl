@@ -72,7 +72,7 @@ system("unzip ${scriptdir}$template") == 0
 
 # Create QR images
 foreach my $box (@ARGV) {
-	system("qrencode -o Pictures/$box.png -m2 http://festing.org/b/$box")==0
+	system("qrencode -o Pictures/$box.png -m2 https://festing.org/b/$box")==0
 		or die "Can't create QR code $box: $!\n";
 }
 
