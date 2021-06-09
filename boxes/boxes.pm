@@ -73,7 +73,6 @@ sub writebox {
 
 	my %metadata = %$box;
 	delete $metadata{number};
-	delete $metadata{packed};
 	delete $metadata{CONTENT};
 	foreach my $tag (keys %metadata) {
 		print BOX "$tag: $metadata{$tag}\n";
