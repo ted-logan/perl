@@ -2,6 +2,8 @@
 
 use strict;
 
+use POSIX qw(strftime);
+
 BEGIN {
 	my $scriptdir;
 
@@ -27,7 +29,7 @@ print <<HTML;
 HTML
 
 if($boxnum) {
-	my @columns = qw(contents current-location location label packed);
+	my @columns = qw(contents current-location location label packed reviewed);
 
 	print "<title>Box $boxnum</title></head>\n";
 	print "<body>\n";
@@ -35,18 +37,18 @@ if($boxnum) {
 	print qq'<a href="/b/">All boxes</a>\n';
 	if(exists $boxes{$boxnum}) {
 		print "<h1>Box $boxnum</h1>\n";
-		if($q->param('confirm') eq 'Unpack') {
+		if($q->param('action') eq 'Unpack') {
 			# Show a confirmation dialog to make sure the user
 			# wants to mark this box as unpacked (which will delete
 			# it from the database)
 			print "<h2>Do you want to unpack this box?</h2>\n";
 			print qq'<form method="post" action="/b/$boxnum">\n';
-			print qq'<input type="submit" name="confirm" value="Yes" /><br/>\n';
-			print qq'<input type="submit" name="confirm" value="No" /><br/>\n';
+			print qq'<input type="submit" name="unpack" value="Yes" /><br/>\n';
+			print qq'<input type="submit" name="unpack" value="No" /><br/>\n';
 			print qq'</form>\n';
 			print qq'<p>(Unpacking the box will remove it from the database.)</p>\n';
 
-		} elsif($q->param('confirm') eq 'Yes') {
+		} elsif($q->param('unpack') eq 'Yes') {
 			# The user has confirmed that they wish to remove it
 			# from the database. Attempt to do so.
 			if(boxes::unpackbox($boxnum)) {
@@ -55,11 +57,26 @@ if($boxnum) {
 				print "<p>Error unpacking box <b>$boxnum</b>: $!.</p>\n";
 			}
 
+		} elsif($q->param('action') eq 'Review') {
+			# Show a confirmation dialog to make sure the user
+			# wants to mark this box as reviewed
+			print "<h2>Do you want to mark this box as reviewed?</h2>\n";
+			print qq'<form method="post" action="/b/$boxnum">\n';
+			print qq'<input type="submit" name="review" value="Yes" /><br/>\n';
+			print qq'<input type="submit" name="review" value="No" /><br/>\n';
+			print qq'</form>\n';
+
 		} else {
+			if($q->param('review') eq 'Yes') {
+				$boxes{$boxnum}->{reviewed} = strftime("%Y-%m-%d", localtime(time));
+				boxes::writebox($boxes{$boxnum});
+			}
+
 			# Show the current contents of the box
 			unless($boxnum =~ /_UNPACKED$/) {
 				print qq'<form method="post" action="/b/$boxnum">\n';
-				print qq'<input type="submit" name="confirm" value="Unpack" />\n';
+				print qq'<input type="submit" name="action" value="Unpack" />\n';
+				print qq'<input type="submit" name="action" value="Review" />\n';
 				print qq'</form>\n';
 			}
 			foreach my $label (@columns) {
@@ -124,7 +141,7 @@ if($boxnum) {
 	}
 
 } else {
-	my @columns = qw(number contents packed current-location location label);
+	my @columns = qw(number contents packed reviewed current-location location label);
 
 	my $sort = $q->param('sort');
 	if(!(grep(/^$sort$/, @columns))) {
