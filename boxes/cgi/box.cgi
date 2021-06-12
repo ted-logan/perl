@@ -35,6 +35,11 @@ if($boxnum) {
 	print "<body>\n";
 	print_search();
 	print qq'<a href="/b/">All boxes</a>\n';
+
+	if(!exists $boxes{$boxnum} && exists $boxes{$boxnum . "_UNPACKED"}) {
+		$boxnum .= "_UNPACKED";
+	}
+
 	if(exists $boxes{$boxnum}) {
 		print "<h1>Box $boxnum</h1>\n";
 		if($q->param('action') eq 'Unpack') {
